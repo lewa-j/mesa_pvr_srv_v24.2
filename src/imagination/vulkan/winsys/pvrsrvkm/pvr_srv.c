@@ -175,9 +175,13 @@ static VkResult pvr_srv_heap_init(
 
    /* Create server-side counterpart of Device Memory heap */
    result = pvr_srv_int_heap_create(srv_ws->base.render_fd,
+#if 0//v1.17
                                     srv_heap->base.base_addr,
                                     srv_heap->base.size,
                                     srv_heap->base.log2_page_size,
+#else//v24.2
+                                    heap_idx,
+#endif
                                     srv_ws->server_memctx,
                                     &srv_heap->server_heap);
    if (result != VK_SUCCESS) {
@@ -671,6 +675,15 @@ static bool pvr_is_driver_compatible(int render_fd)
    /* Only the 1.17 driver is supported for now. */
    if (version->version_major != PVR_SRV_VERSION_MAJ ||
        version->version_minor != PVR_SRV_VERSION_MIN) {
+
+      //HACK HACK
+      if (version->version_major == 24 && version->version_minor == 2) {
+         mesa_logw("Using unsupported downstream pvr driver version (%u.%u)",
+            version->version_major, version->version_minor);
+         drmFreeVersion(version);
+         return true;
+      }
+       
       vk_errorf(NULL,
                 VK_ERROR_INCOMPATIBLE_DRIVER,
                 "Unsupported downstream driver version (%u.%u)",

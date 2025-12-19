@@ -50,6 +50,8 @@
 
 #define PVR_SRV_BRIDGE_MM 6UL
 
+#if 0
+//v1.17
 #define PVR_SRV_BRIDGE_MM_PMRUNREFUNLOCKPMR 8UL
 #define PVR_SRV_BRIDGE_MM_PHYSMEMNEWRAMBACKEDLOCKEDPMR 10UL
 #define PVR_SRV_BRIDGE_MM_DEVMEMINTCTXCREATE 15UL
@@ -64,7 +66,37 @@
 #define PVR_SRV_BRIDGE_MM_DEVMEMINTUNMAPPAGES 25UL
 #define PVR_SRV_BRIDGE_MM_HEAPCFGHEAPCOUNT 30UL
 #define PVR_SRV_BRIDGE_MM_HEAPCFGHEAPDETAILS 32UL
+#else
+//v24.2
+#define PVR_SRV_BRIDGE_MM_PMRUNREFPMR 7UL
+#define PVR_SRV_BRIDGE_MM_PHYSMEMNEWRAMBACKEDPMR 8UL
+#define PVR_SRV_BRIDGE_MM_DEVMEMINTCTXCREATE 9UL
+#define PVR_SRV_BRIDGE_MM_DEVMEMINTCTXDESTROY 10UL
+#define PVR_SRV_BRIDGE_MM_DEVMEMINTHEAPCREATE 11UL
+#define PVR_SRV_BRIDGE_MM_DEVMEMINTHEAPDESTROY 12UL
+#define PVR_SRV_BRIDGE_MM_DEVMEMINTMAPPMR 13UL
+#define PVR_SRV_BRIDGE_MM_DEVMEMINTUNMAPPMR 14UL
+#define PVR_SRV_BRIDGE_MM_DEVMEMINTRESERVERANGE 15UL
+#define PVR_SRV_BRIDGE_MM_DEVMEMINTRESERVERANGEANDMAPPMR 16UL
+#define PVR_SRV_BRIDGE_MM_DEVMEMINTUNRESERVERANGE 17UL
+#define PVR_SRV_BRIDGE_MM_HEAPCFGHEAPCOUNT 22UL
+#define PVR_SRV_BRIDGE_MM_HEAPCFGHEAPDETAILS 24UL
 
+#define PVR_SRV_BRIDGE_MM_DEVMEMXINTRESERVERANGE 30UL
+#define PVR_SRV_BRIDGE_MM_DEVMEMXINTUNRESERVERANGE 31UL
+#define PVR_SRV_BRIDGE_MM_DEVMEMXINTMAPPAGES 32UL
+#define PVR_SRV_BRIDGE_MM_DEVMEMXINTUNMAPPAGES 33UL
+#define PVR_SRV_BRIDGE_MM_DEVMEMXINTMAPVRANGETOBACKINGPAGE 34UL
+
+//probably wrong
+#define PVR_SRV_BRIDGE_MM_PMRUNREFUNLOCKPMR PVR_SRV_BRIDGE_MM_PMRUNREFPMR
+#define PVR_SRV_BRIDGE_MM_PHYSMEMNEWRAMBACKEDLOCKEDPMR PVR_SRV_BRIDGE_MM_PHYSMEMNEWRAMBACKEDPMR
+//#define PVR_SRV_BRIDGE_MM_DEVMEMINTRESERVERANGE PVR_SRV_BRIDGE_MM_DEVMEMXINTRESERVERANGE
+//#define PVR_SRV_BRIDGE_MM_DEVMEMINTUNRESERVERANGE PVR_SRV_BRIDGE_MM_DEVMEMXINTUNRESERVERANGE
+#define PVR_SRV_BRIDGE_MM_DEVMEMINTMAPPAGES PVR_SRV_BRIDGE_MM_DEVMEMXINTMAPPAGES
+#define PVR_SRV_BRIDGE_MM_DEVMEMINTUNMAPPAGES PVR_SRV_BRIDGE_MM_DEVMEMXINTUNMAPPAGES
+
+#endif
 #define PVR_SRV_BRIDGE_DMABUF 11UL
 
 #define PVR_SRV_BRIDGE_DMABUF_PHYSMEMIMPORTDMABUF 0UL
@@ -80,10 +112,16 @@
 
 #define PVR_SRV_BRIDGE_RGXCMP_RGXCREATECOMPUTECONTEXT 0UL
 #define PVR_SRV_BRIDGE_RGXCMP_RGXDESTROYCOMPUTECONTEXT 1UL
+#if 0//v1.17
 #define PVR_SRV_BRIDGE_RGXCMP_RGXKICKCDM2 5UL
+#else//v24.2
+#define PVR_SRV_BRIDGE_RGXCMP_RGXKICKCDM 9UL
+#define PVR_SRV_BRIDGE_RGXCMP_RGXKICKCDM2 PVR_SRV_BRIDGE_RGXCMP_RGXKICKCDM
+#endif
 
 #define PVR_SRV_BRIDGE_RGXTA3D 130UL
 
+#if 0//v1.17
 #define PVR_SRV_BRIDGE_RGXTA3D_RGXCREATEHWRTDATASET 0UL
 #define PVR_SRV_BRIDGE_RGXTA3D_RGXDESTROYHWRTDATASET 1UL
 #define PVR_SRV_BRIDGE_RGXTA3D_RGXCREATEFREELIST 6UL
@@ -91,6 +129,15 @@
 #define PVR_SRV_BRIDGE_RGXTA3D_RGXCREATERENDERCONTEXT 8UL
 #define PVR_SRV_BRIDGE_RGXTA3D_RGXDESTROYRENDERCONTEXT 9UL
 #define PVR_SRV_BRIDGE_RGXTA3D_RGXKICKTA3D2 12UL
+#else//v24.2
+#define PVR_SRV_BRIDGE_RGXTA3D_RGXDESTROYHWRTDATASET 0UL
+#define PVR_SRV_BRIDGE_RGXTA3D_RGXDESTROYFREELIST 5UL
+#define PVR_SRV_BRIDGE_RGXTA3D_RGXDESTROYRENDERCONTEXT 6UL
+#define PVR_SRV_BRIDGE_RGXTA3D_RGXKICKTA3D2 10UL
+#define PVR_SRV_BRIDGE_RGXTA3D_RGXCREATEHWRTDATASET 12UL
+#define PVR_SRV_BRIDGE_RGXTA3D_RGXCREATEFREELIST 13UL
+#define PVR_SRV_BRIDGE_RGXTA3D_RGXCREATERENDERCONTEXT 14UL
+#endif
 
 /******************************************************************************
    DRM Services specific defines
@@ -131,11 +178,13 @@
 #define SUPPORT_RGX_SET_OFFSET BITFIELD_BIT(4U)
 #define DEBUG_SET_OFFSET BITFIELD_BIT(10U)
 #define SUPPORT_BUFFER_SYNC_SET_OFFSET BITFIELD_BIT(11U)
+#define NUM_DRIVERS_SUPPORTED_CHECK_EN BITFIELD_BIT(17U)
 #define OPTIONS_BIT31 BITFIELD_BIT(31U)
 
 #define RGX_BUILD_OPTIONS                       \
    (SUPPORT_RGX_SET_OFFSET | DEBUG_SET_OFFSET | \
-    SUPPORT_BUFFER_SYNC_SET_OFFSET | OPTIONS_BIT31)
+    SUPPORT_BUFFER_SYNC_SET_OFFSET |            \
+    NUM_DRIVERS_SUPPORTED_CHECK_EN | OPTIONS_BIT31)
 
 #define PVR_SRV_VERSION_MAJ 1U
 #define PVR_SRV_VERSION_MIN 17U
@@ -179,7 +228,11 @@ enum pvr_srv_bool {
 enum pvr_srv_error {
    PVR_SRV_OK,
    PVR_SRV_ERROR_RETRY = 25,
+   PVR_SRV_ERROR_DDK_VERSION_MISMATCH = 26,
+   PVR_SRV_ERROR_DDK_BUILD_MISMATCH = 27,
+   PVR_SRV_ERROR_BUILD_OPTIONS_MISMATCH = 28,
    PVR_SRV_ERROR_BRIDGE_CALL_FAILED = 37,
+   PVR_SRV_ERROR_BRIDGE_ARRAY_SIZE_TOO_BIG = 350,
    PVR_SRV_ERROR_FORCE_I32 = 0x7fffffff
 };
 
@@ -267,7 +320,8 @@ struct pvr_srv_bridge_sync_prim_set_ret {
  ******************************************************************************/
 
 struct pvr_srv_devmem_int_ctx_create_cmd {
-   uint32_t kernel_memory_ctx;
+   //uint32_t kernel_memory_ctx;//v1.17
+   bool kernel_memory_ctx;//v24.2
 } PACKED;
 
 struct pvr_srv_devmem_int_ctx_create_ret {
@@ -326,14 +380,20 @@ struct pvr_srv_heap_cfg_details_ret {
 /******************************************************************************
    PVR_SRV_BRIDGE_MM_DEVMEMINTHEAPCREATE structs
  ******************************************************************************/
-
+#if 0//v1.17
 struct pvr_srv_devmem_int_heap_create_cmd {
    pvr_dev_addr_t base_addr;
    uint64_t size;
    void *server_memctx;
    uint32_t log2_page_size;
 } PACKED;
-
+#else//v24.2
+struct pvr_srv_devmem_int_heap_create_cmd {
+   void *devmem_ctx;
+   uint32_t heap_config_index;
+   uint32_t heap_index;
+} PACKED;
+#endif
 struct pvr_srv_devmem_int_heap_create_ret {
    void *server_heap;
    enum pvr_srv_error error;
@@ -359,6 +419,10 @@ struct pvr_srv_devmem_int_reserve_range_cmd {
    pvr_dev_addr_t addr;
    uint64_t size;
    void *server_heap;
+#if 1//v24.2
+   //in DevmemIntReserveRange, not in DevmemXIntReserveRange
+   uint64_t flags;
+#endif
 } PACKED;
 
 struct pvr_srv_devmem_int_reserve_range_ret {
@@ -383,7 +447,9 @@ struct pvr_srv_bridge_in_devmem_int_unreserve_range_ret {
  ******************************************************************************/
 
 struct pvr_srv_physmem_new_ram_backed_locked_pmr_cmd {
+#if 0//v1.17
    uint64_t block_size;
+#endif
    uint64_t size;
    uint32_t *mapping_table;
    const char *annotation;
@@ -419,11 +485,16 @@ struct pvr_srv_pmr_unref_unlock_pmr_ret {
  ******************************************************************************/
 
 struct pvr_srv_devmem_int_map_pages_cmd {
+#if 0//v1.17
    pvr_dev_addr_t addr;
+#endif
    void *pmr;
    void *reservation;
    uint32_t page_count;
    uint32_t page_offset;
+#if 1//v24.2
+   uint32_t virt_page_offset;
+#endif
    uint64_t flags;
 } PACKED;
 
@@ -436,9 +507,14 @@ struct pvr_srv_devmem_int_map_pages_ret {
  ******************************************************************************/
 
 struct pvr_srv_devmem_int_unmap_pages_cmd {
+#if 0//v1.17
    pvr_dev_addr_t dev_addr;
+#endif
    void *reservation;
    uint32_t page_count;
+#if 1//v24.2
+   uint32_t virt_page_offset;
+#endif
 } PACKED;
 
 struct pvr_srv_devmem_int_unmap_pages_ret {
@@ -450,14 +526,20 @@ struct pvr_srv_devmem_int_unmap_pages_ret {
  ******************************************************************************/
 
 struct pvr_srv_devmem_int_map_pmr_cmd {
+#if 0//v1.17
    void *server_heap;
+#endif
    void *pmr;
    void *reservation;
+#if 0//v1.17
    uint64_t flags;
+#endif
 } PACKED;
 
 struct pvr_srv_devmem_int_map_pmr_ret {
+#if 0//v1.17
    void *mapping;
+#endif
    enum pvr_srv_error error;
 } PACKED;
 
@@ -466,7 +548,11 @@ struct pvr_srv_devmem_int_map_pmr_ret {
  ******************************************************************************/
 
 struct pvr_srv_devmem_int_unmap_pmr_cmd {
+#if 0//v1.17
    void *mapping;
+#else//v24.2
+   void *reservation;
+#endif
 } PACKED;
 
 struct pvr_srv_devmem_int_unmap_pmr_ret {
@@ -512,16 +598,27 @@ struct pvr_srv_rgx_create_transfer_context_cmd {
    uint64_t robustness_address;
    void *priv_data;
    uint8_t *reset_framework_cmd;
+#if 0//v1.17
    uint32_t context_flags;
    uint32_t reset_framework_cmd_size;
    uint32_t packed_ccb_size_u8888;
    uint32_t priority;
+#else//v24.2
+   int32_t priority;
+   uint32_t context_flags;
+   uint32_t reset_framework_cmd_size;
+   uint32_t packed_ccb_size_u8888;
+#endif
 } PACKED;
 
 struct pvr_srv_rgx_create_transfer_context_ret {
+#if 0//v1.17
    void *cli_pmr_mem;
    void *transfer_context;
    void *usc_pmr_mem;
+#else//v24.2
+   void *transfer_context;
+#endif
    enum pvr_srv_error error;
 } PACKED;
 
@@ -576,12 +673,20 @@ struct pvr_srv_rgx_create_compute_context_cmd {
    void *priv_data;
    uint8_t *reset_framework_cmd;
    uint8_t *static_compute_context_state;
+#if 0//v1.17
    uint32_t context_flags;
    uint32_t reset_framework_cmd_size;
    uint32_t max_deadline_ms;
    uint32_t packed_ccb_size;
    /* RGX_CONTEXT_PRIORITY_... flags. */
    uint32_t priority;
+#else//v24.2
+   int32_t priority;
+   uint32_t context_flags;
+   uint32_t reset_framework_cmd_size;
+   uint32_t max_deadline_ms;
+   uint32_t packed_ccb_size;
+#endif
    uint32_t static_compute_context_state_size;
 } PACKED;
 
@@ -697,6 +802,7 @@ struct pvr_srv_rgx_destroy_hwrt_dataset_ret {
  ******************************************************************************/
 
 struct pvr_srv_rgx_create_free_list_cmd {
+#if 0//v1.17
    pvr_dev_addr_t free_list_dev_addr;
    uint64_t pmr_offset;
    void *mem_ctx_priv_data;
@@ -707,6 +813,16 @@ struct pvr_srv_rgx_create_free_list_cmd {
    uint32_t grow_param_threshold;
    uint32_t init_free_list_pages;
    uint32_t max_free_list_pages;
+#else//v24.2
+   void *free_list_reservation;
+   void *mem_ctx_priv_data;
+   void *global_free_list;
+   uint32_t grow_free_list_pages;
+   uint32_t grow_param_threshold;
+   uint32_t init_free_list_pages;
+   uint32_t max_free_list_pages;
+   bool free_list_check;
+#endif
 } PACKED;
 
 struct pvr_srv_rgx_create_free_list_ret {
@@ -730,23 +846,34 @@ struct pvr_srv_rgx_destroy_free_list_ret {
    PVR_SRV_BRIDGE_RGXTA3D_RGXCREATERENDERCONTEXT structs
  ******************************************************************************/
 
+#define RGX_CONTEXT_FLAG_DISABLESLR BITFIELD_BIT(0U)
+
+#define RGX_CONTEXT_PRIORITY_REALTIME UINT32_MAX
+#define RGX_CONTEXT_PRIORITY_HIGH 2U
+#define RGX_CONTEXT_PRIORITY_MEDIUM 1U
+#define RGX_CONTEXT_PRIORITY_LOW 0U
+
 struct pvr_srv_rgx_create_render_context_cmd {
    pvr_dev_addr_t vdm_callstack_addr;
    uint64_t robustness_address;
    void *priv_data;
    uint8_t *reset_framework_cmd;
    uint8_t *static_render_context_state;
-#define RGX_CONTEXT_FLAG_DISABLESLR BITFIELD_BIT(0U)
+#if 0//v1.17
    uint32_t context_flags;
    uint32_t reset_framework_cmd_size;
    uint32_t max_3d_deadline_ms;
    uint32_t max_ta_deadline_ms;
    uint32_t packed_ccb_size;
-#define RGX_CONTEXT_PRIORITY_REALTIME UINT32_MAX
-#define RGX_CONTEXT_PRIORITY_HIGH 2U
-#define RGX_CONTEXT_PRIORITY_MEDIUM 1U
-#define RGX_CONTEXT_PRIORITY_LOW 0U
    uint32_t priority;
+#else//v24.2
+   int32_t priority;
+   uint32_t context_flags;
+   uint32_t reset_framework_cmd_size;
+   uint32_t max_3d_deadline_ms;
+   uint32_t max_ta_deadline_ms;
+   uint32_t packed_ccb_size;
+#endif
    uint32_t static_render_context_state_size;
    uint32_t call_stack_depth;
 } PACKED;
@@ -916,9 +1043,13 @@ VkResult pvr_srv_get_heap_details(int fd,
                                   uint32_t *const log2_page_size_out);
 
 VkResult pvr_srv_int_heap_create(int fd,
+#if 0//v1.17
                                  pvr_dev_addr_t base_address,
                                  uint64_t size,
                                  uint32_t log2_page_size,
+#else//v24.2
+                                 uint32_t heap_index,
+#endif
                                  void *server_memctx,
                                  void **const server_heap_out);
 void pvr_srv_int_heap_destroy(int fd, void *server_heap);
@@ -932,6 +1063,7 @@ VkResult pvr_srv_int_reserve_addr(int fd,
                                   void *server_heap,
                                   pvr_dev_addr_t addr,
                                   uint64_t size,
+                                  uint64_t flags,
                                   void **const reservation_out);
 void pvr_srv_int_unreserve_addr(int fd, void *reservation);
 
@@ -1083,9 +1215,13 @@ VkResult pvr_srv_rgx_create_free_list(int fd,
                                       uint32_t grow_param_threshold,
                                       void *global_free_list,
                                       enum pvr_srv_bool free_list_check,
+#if 0//v1.17
                                       pvr_dev_addr_t free_list_dev_addr,
                                       void *free_list_pmr,
                                       uint64_t pmr_offset,
+#else//v24.2
+                                      void *free_list_reservation,
+#endif
                                       void **const cleanup_cookie_out);
 
 void pvr_srv_rgx_destroy_free_list(int fd, void *cleanup_cookie);

@@ -225,12 +225,13 @@ struct rogue_fwif_ta_regs_cswitch {
       uint64_t vdm_context_resume_task1;
       /** VDM context resume task 2. */
       uint64_t vdm_context_resume_task2;
-
+#if 0//v1.17
       uint64_t vdm_context_store_task3;
       uint64_t vdm_context_store_task4;
 
       uint64_t vdm_context_resume_task3;
       uint64_t vdm_context_resume_task4;
+#endif
    } ta_state[2];
 };
 

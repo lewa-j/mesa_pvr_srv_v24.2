@@ -103,6 +103,7 @@ VkResult pvr_srv_winsys_free_list_create(
    struct pvr_srv_winsys *srv_ws = to_pvr_srv_winsys(ws);
    struct pvr_srv_winsys_bo *srv_free_list_bo =
       to_pvr_srv_winsys_bo(free_list_vma->bo);
+   struct pvr_srv_winsys_vma *srv_vma = to_pvr_srv_winsys_vma(free_list_vma);
    struct pvr_srv_winsys_free_list *srv_free_list;
    void *parent_handle;
    VkResult result;
@@ -134,9 +135,13 @@ VkResult pvr_srv_winsys_free_list_create(
 #else
                                          PVR_SRV_FALSE /* free_list_check */,
 #endif
+#if 0//v1.17
                                          free_list_vma->dev_addr,
                                          srv_free_list_bo->pmr,
                                          0 /* pmr_offset */,
+#else
+                                         srv_vma->reservation,
+#endif
                                          &srv_free_list->handle);
    if (result != VK_SUCCESS)
       goto err_vk_free_srv_free_list;

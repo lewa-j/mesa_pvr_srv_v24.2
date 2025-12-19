@@ -509,13 +509,23 @@ VkResult pvr_srv_winsys_vma_map(struct pvr_winsys_vma *vma,
    const uint32_t virt_offset = offset & (vma->heap->page_size - 1);
    const uint64_t aligned_virt_size =
       ALIGN_POT(virt_offset + size, vma->heap->page_size);
+   if (offset != 0 || bo->size != ALIGN_POT(size, srv_ws->base.page_size) ||
+          vma->size != bo->size) {
+      printf("pvr_srv_winsys_vma_map(%" PRIu64 " %" PRIu64 ") virt_offset %u", offset, size, virt_offset);
+   }
+
    VkResult result;
 
    /* Address should not be mapped already */
    assert(!vma->bo);
-
+   struct pvr_srv_winsys_heap *srv_heap = to_pvr_srv_winsys_heap(vma->heap);
+#if 1//v24.2
+   if (offset != 0 || bo->size != ALIGN_POT(size, srv_ws->base.page_size) ||
+          vma->size != bo->size) {
+         return vk_error(NULL, VK_ERROR_MEMORY_MAP_FAILED);
+   }
+#endif
    if (srv_bo->is_display_buffer) {
-      struct pvr_srv_winsys_heap *srv_heap = to_pvr_srv_winsys_heap(vma->heap);
 
       /* In case of display buffers, we only support to map whole PMR */
       if (offset != 0 || bo->size != ALIGN_POT(size, srv_ws->base.page_size) ||
@@ -543,6 +553,7 @@ VkResult pvr_srv_winsys_vma_map(struct pvr_winsys_vma *vma,
          return vk_error(NULL, VK_ERROR_MEMORY_MAP_FAILED);
       }
 
+#if 0//v1.17
       /* Map the requested pages */
       result = pvr_srv_int_map_pages(srv_ws->base.render_fd,
                                      srv_vma->reservation,
@@ -551,6 +562,14 @@ VkResult pvr_srv_winsys_vma_map(struct pvr_winsys_vma *vma,
                                      phys_page_offset,
                                      srv_flags,
                                      vma->dev_addr);
+#else//v24.2
+      result = pvr_srv_int_map_pmr(srv_ws->base.render_fd,
+                                   srv_heap->server_heap,
+                                   srv_vma->reservation,
+                                   srv_bo->pmr,
+                                   srv_flags,
+                                   &srv_vma->mapping);
+#endif
    }
 
    if (result != VK_SUCCESS)
@@ -583,11 +602,15 @@ void pvr_srv_winsys_vma_unmap(struct pvr_winsys_vma *vma)
       /* Unmap the requested pmr */
       pvr_srv_int_unmap_pmr(srv_ws->base.render_fd, srv_vma->mapping);
    } else {
+#if 0//v1.17
       /* Unmap requested pages */
       pvr_srv_int_unmap_pages(srv_ws->base.render_fd,
                               srv_vma->reservation,
                               vma->dev_addr,
                               vma->mapped_size >> srv_ws->base.log2_page_size);
+#else
+      pvr_srv_int_unmap_pmr(srv_ws->base.render_fd, srv_vma->reservation);//reservation no mapping!
+#endif
    }
 
    buffer_release(srv_bo);

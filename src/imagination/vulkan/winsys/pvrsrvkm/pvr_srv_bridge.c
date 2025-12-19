@@ -39,9 +39,8 @@
 #include "vk_log.h"
 
 #define vk_bridge_err(vk_err, bridge_func, bridge_ret)  \
-   vk_errorf(NULL,                                      \
-             vk_err,                                    \
-             "%s failed, PVR_SRV_ERROR: %d, Errno: %s", \
+   printf(                                    \
+             "%s failed, PVR_SRV_ERROR: %d, Errno: %s\n", \
              bridge_func,                               \
              (bridge_ret).error,                        \
              strerror(errno))
@@ -65,7 +64,10 @@ static int pvr_srv_bridge_call(int fd,
 
    int ret = drmIoctl(fd, DRM_IOCTL_SRVKM_CMD, &cmd);
    if (unlikely(ret))
+   {
+      printf("pvr_srv_bridge_call(%d, %u, %u, %u, %u) error %d\n", fd, bridge_id, function_id, input_buffer_size, output_buffer_size, ret);
       return ret;
+   }
 
    VG(VALGRIND_MAKE_MEM_DEFINED(output, output_buffer_size));
 
@@ -162,8 +164,11 @@ VkResult pvr_srv_connection_create(int fd, uint64_t *const bvnc_out)
    struct pvr_srv_bridge_connect_cmd cmd = {
       .flags = PVR_SRV_FLAGS_CLIENT_64BIT_COMPAT,
       .build_options = RGX_BUILD_OPTIONS,
-      .DDK_version = PVR_SRV_VERSION,
-      .DDK_build = PVR_SRV_VERSION_BUILD,
+      //.DDK_version = PVR_SRV_VERSION,
+      //.DDK_build = PVR_SRV_VERSION_BUILD,
+      //HACK HACK
+      .DDK_version = (((uint32_t)((uint32_t)(24) & 0xFFFFU) << 16U) | (((2) & 0xFFFFU) << 0U)),
+      .DDK_build = 6603887,
    };
 
    /* Initialize ret.error to a default error */
@@ -181,6 +186,15 @@ VkResult pvr_srv_connection_create(int fd, uint64_t *const bvnc_out)
                                 &ret,
                                 sizeof(ret));
    if (result || ret.error != PVR_SRV_OK) {
+      if (ret.error == PVR_SRV_ERROR_DDK_VERSION_MISMATCH)
+         mesa_loge("pvr_srv_connection_create PVR_SRV_BRIDGE_SRVCORE_CONNECT ret PVR_SRV_ERROR_DDK_VERSION_MISMATCH");
+      else if (ret.error == PVR_SRV_ERROR_DDK_BUILD_MISMATCH)
+         mesa_loge("pvr_srv_connection_create PVR_SRV_BRIDGE_SRVCORE_CONNECT ret PVR_SRV_ERROR_DDK_BUILD_MISMATCH");
+      else if (ret.error == PVR_SRV_ERROR_BUILD_OPTIONS_MISMATCH)
+         mesa_loge("pvr_srv_connection_create PVR_SRV_BRIDGE_SRVCORE_CONNECT ret PVR_SRV_ERROR_BUILD_OPTIONS_MISMATCH");
+      else
+         mesa_loge("pvr_srv_connection_create PVR_SRV_BRIDGE_SRVCORE_CONNECT ret error %d", ret.error);
+
       return vk_bridge_err(VK_ERROR_INITIALIZATION_FAILED,
                            "PVR_SRV_BRIDGE_SRVCORE_CONNECT",
                            ret);
@@ -371,17 +385,27 @@ VkResult pvr_srv_get_heap_count(int fd, uint32_t *const heap_count_out)
 }
 
 VkResult pvr_srv_int_heap_create(int fd,
+#if 0//v1.17
                                  pvr_dev_addr_t base_address,
                                  uint64_t size,
                                  uint32_t log2_page_size,
+#else//v24.2
+                                 uint32_t heap_index,
+#endif
                                  void *server_memctx,
                                  void **const server_heap_out)
 {
    struct pvr_srv_devmem_int_heap_create_cmd cmd = {
+#if 0//v1.17
       .server_memctx = server_memctx,
       .base_addr = base_address,
       .size = size,
       .log2_page_size = log2_page_size,
+#else//v24.2
+      .devmem_ctx = server_memctx,
+      .heap_config_index = 0,
+      .heap_index = heap_index,
+#endif
    };
 
    struct pvr_srv_devmem_int_heap_create_ret ret = {
@@ -554,12 +578,16 @@ VkResult pvr_srv_int_reserve_addr(int fd,
                                   void *server_heap,
                                   pvr_dev_addr_t addr,
                                   uint64_t size,
+                                  uint64_t flags,
                                   void **const reservation_out)
 {
    struct pvr_srv_devmem_int_reserve_range_cmd cmd = {
       .server_heap = server_heap,
       .addr = addr,
       .size = size,
+#if 1//v24.2
+      .flags = flags,
+#endif
    };
 
    struct pvr_srv_devmem_int_reserve_range_ret ret = {
@@ -627,9 +655,16 @@ VkResult pvr_srv_alloc_pmr(int fd,
       strnlen(annotation, DEVMEM_ANNOTATION_MAX_LEN - 1) + 1;
    uint32_t mapping_table = 0;
 
+#if 1//v24.2
+   if (size != block_size)
+      printf("pvr_srv_alloc_pmr size missmatch %" PRIu64 " %" PRIu64 "\n",size, block_size);
+#endif
+
    struct pvr_srv_physmem_new_ram_backed_locked_pmr_cmd cmd = {
       .size = size,
+#if 0//v1.17
       .block_size = block_size,
+#endif
       .phy_blocks = phy_blocks,
       .virt_blocks = virt_blocks,
       .mapping_table = &mapping_table,
@@ -699,13 +734,24 @@ VkResult pvr_srv_int_map_pages(int fd,
                                uint64_t flags,
                                pvr_dev_addr_t addr)
 {
+   #if 1//v24.2
+   //if (addr.addr)
+   {
+      printf("pvr_srv_int_map_pages addr %zu\n", addr.addr);
+      //return VK_ERROR_MEMORY_MAP_FAILED;
+   }
+   #endif
    struct pvr_srv_devmem_int_map_pages_cmd cmd = {
       .reservation = reservation,
       .pmr = pmr,
       .page_count = page_count,
       .page_offset = page_offset,
       .flags = flags,
+#if 0//v1.17
       .addr = addr,
+#else//v24.2
+      .virt_page_offset = 0,//addr.addr,
+#endif
    };
 
    struct pvr_srv_devmem_int_map_pages_ret ret = {
@@ -735,9 +781,20 @@ void pvr_srv_int_unmap_pages(int fd,
                              pvr_dev_addr_t dev_addr,
                              uint32_t page_count)
 {
+   #if 1//v24.2
+   //if (addr.addr)
+   {
+      printf("pvr_srv_int_unmap_pages dev_addr %zu\n", dev_addr.addr);
+      //return VK_ERROR_MEMORY_MAP_FAILED;
+   }
+   #endif
    struct pvr_srv_devmem_int_unmap_pages_cmd cmd = {
       .reservation = reservation,
+#if 0//v1.17
       .dev_addr = dev_addr,
+#else//v24.2
+      .virt_page_offset = 0,//dev_addr.addr,
+#endif
       .page_count = page_count,
    };
 
@@ -769,10 +826,12 @@ VkResult pvr_srv_int_map_pmr(int fd,
                              void **const mapping_out)
 {
    struct pvr_srv_devmem_int_map_pmr_cmd cmd = {
+#if 0//v1.17
       .server_heap = server_heap,
+      .flags = flags,
+#endif
       .reservation = reservation,
       .pmr = pmr,
-      .flags = flags,
    };
 
    struct pvr_srv_devmem_int_map_pmr_ret ret = {
@@ -794,15 +853,21 @@ VkResult pvr_srv_int_map_pmr(int fd,
                            ret);
    }
 
+   *mapping_out = 0;
+#if 0//v1.17
    *mapping_out = ret.mapping;
-
+#endif
    return VK_SUCCESS;
 }
 
 void pvr_srv_int_unmap_pmr(int fd, void *mapping)
 {
    struct pvr_srv_devmem_int_unmap_pmr_cmd cmd = {
+#if 0//v1.17
       .mapping = mapping,
+#else//v24.2
+      .reservation = mapping,
+#endif
    };
 
    struct pvr_srv_devmem_int_unmap_pmr_ret ret = {
@@ -935,13 +1000,13 @@ VkResult pvr_srv_rgx_create_transfer_context(int fd,
                            "PVR_SRV_BRIDGE_RGXTQ_RGXCREATETRANSFERCONTEXT",
                            ret);
    }
-
+#if 0//v1.17
    if (cli_pmr_out)
       *cli_pmr_out = ret.cli_pmr_mem;
 
    if (usc_pmr_out)
       *usc_pmr_out = ret.usc_pmr_mem;
-
+#endif
    *transfer_context_out = ret.transfer_context;
 
    return VK_SUCCESS;
@@ -1317,16 +1382,24 @@ VkResult pvr_srv_rgx_create_free_list(int fd,
                                       uint32_t grow_param_threshold,
                                       void *global_free_list,
                                       enum pvr_srv_bool free_list_check,
+#if 0//v1.17
                                       pvr_dev_addr_t free_list_dev_addr,
                                       void *free_list_pmr,
                                       uint64_t pmr_offset,
+#else//v24.2
+                                      void *free_list_reservation,
+#endif
                                       void **const cleanup_cookie_out)
 {
    struct pvr_srv_rgx_create_free_list_cmd cmd = {
+#if 0//v1.17
       .free_list_dev_addr = free_list_dev_addr,
       .pmr_offset = pmr_offset,
-      .mem_ctx_priv_data = mem_ctx_priv_data,
       .free_list_pmr = free_list_pmr,
+#else//v24.2
+      .free_list_reservation = free_list_reservation,
+#endif
+      .mem_ctx_priv_data = mem_ctx_priv_data,
       .global_free_list = global_free_list,
       .free_list_check = free_list_check,
       .grow_free_list_pages = grow_free_list_pages,
@@ -1440,6 +1513,8 @@ pvr_srv_rgx_create_render_context(int fd,
                                 &ret,
                                 sizeof(ret));
    if (result || ret.error != PVR_SRV_OK) {
+      if (ret.error == PVR_SRV_ERROR_BRIDGE_ARRAY_SIZE_TOO_BIG)
+         printf("pvr_srv_rgx_create_render_context PVR_SRV_ERROR_BRIDGE_ARRAY_SIZE_TOO_BIG\n");
       return vk_bridge_err(VK_ERROR_INITIALIZATION_FAILED,
                            "PVR_SRV_BRIDGE_RGXTA3D_RGXCREATERENDERCONTEXT",
                            ret);
