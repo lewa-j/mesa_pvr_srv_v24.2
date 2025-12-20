@@ -167,7 +167,7 @@ pvr_buffer_create_and_map(struct pvr_winsys *const ws,
    if (result != VK_SUCCESS)
       goto err_out;
 
-   result = heap_alloc_carveout(heap, dev_addr, size, alignment, &vma);
+   result = heap_alloc_carveout(heap, bo, dev_addr, size, alignment, &vma);
    if (result != VK_SUCCESS)
       goto err_pvr_winsys_buffer_destroy;
 

@@ -43,6 +43,7 @@ struct pvr_winsys_vma;
 
 typedef VkResult (*const heap_alloc_carveout_func)(
    struct pvr_winsys_heap *const heap,
+   struct pvr_winsys_bo *bo,
    const pvr_dev_addr_t carveout_dev_addr,
    uint64_t size,
    uint64_t alignment,

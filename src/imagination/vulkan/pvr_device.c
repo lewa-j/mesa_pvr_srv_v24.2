@@ -1391,6 +1391,7 @@ VkResult pvr_bind_memory(struct pvr_device *device,
    assert(offset < mem->bo->size);
 
    result = device->ws->ops->heap_alloc(device->heaps.general_heap,
+                                        mem->bo,
                                         virt_size,
                                         alignment,
                                         &vma);

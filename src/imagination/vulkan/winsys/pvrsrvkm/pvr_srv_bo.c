@@ -354,12 +354,16 @@ VkResult pvr_srv_winsys_buffer_unmap(struct pvr_winsys_bo *bo, bool reserve)
  * what they are doing.
  */
 VkResult pvr_srv_heap_alloc_carveout(struct pvr_winsys_heap *heap,
+                                     struct pvr_winsys_bo *bo,
                                      const pvr_dev_addr_t carveout_dev_addr,
                                      uint64_t size,
                                      uint64_t alignment,
                                      struct pvr_winsys_vma **const vma_out)
 {
    struct pvr_srv_winsys_heap *srv_heap = to_pvr_srv_winsys_heap(heap);
+   struct pvr_srv_winsys_bo *srv_bo = to_pvr_srv_winsys_bo(bo);
+   const uint64_t srv_flags = srv_bo->flags &
+                              PVR_SRV_MEMALLOCFLAGS_VIRTUAL_MASK;
    struct pvr_winsys *ws = heap->ws;
    struct pvr_srv_winsys_vma *srv_vma;
    VkResult result;
@@ -398,7 +402,7 @@ VkResult pvr_srv_heap_alloc_carveout(struct pvr_winsys_heap *heap,
                                      srv_heap->server_heap,
                                      carveout_dev_addr,
                                      size,
-                                     0,//TODO flags
+                                     srv_flags,
                                      &srv_vma->reservation);
    if (result != VK_SUCCESS)
       goto err_vk_free_srv_vma;
@@ -422,13 +426,17 @@ err_out:
 }
 
 VkResult pvr_srv_winsys_heap_alloc(struct pvr_winsys_heap *heap,
+                                   struct pvr_winsys_bo *bo,
                                    uint64_t size,
                                    uint64_t alignment,
                                    struct pvr_winsys_vma **const vma_out)
 {
    struct pvr_srv_winsys_heap *const srv_heap = to_pvr_srv_winsys_heap(heap);
+   struct pvr_srv_winsys_bo *srv_bo = to_pvr_srv_winsys_bo(bo);
    struct pvr_srv_winsys *const srv_ws = to_pvr_srv_winsys(heap->ws);
    struct pvr_srv_winsys_vma *srv_vma;
+   const uint64_t srv_flags = srv_bo->flags &
+                              PVR_SRV_MEMALLOCFLAGS_VIRTUAL_MASK;
    VkResult result;
 
    srv_vma = vk_alloc(srv_ws->base.alloc,
@@ -449,7 +457,7 @@ VkResult pvr_srv_winsys_heap_alloc(struct pvr_winsys_heap *heap,
                                      srv_heap->server_heap,
                                      srv_vma->base.dev_addr,
                                      srv_vma->base.size,
-                                     0,//TODO flags
+                                     srv_flags,
                                      &srv_vma->reservation);
    if (result != VK_SUCCESS)
       goto err_pvr_srv_free_allocation;

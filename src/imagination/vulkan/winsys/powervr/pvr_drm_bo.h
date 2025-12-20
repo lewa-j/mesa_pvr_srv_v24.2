@@ -71,11 +71,13 @@ VkResult pvr_drm_winsys_buffer_map(struct pvr_winsys_bo *bo, void *addr);
 VkResult pvr_drm_winsys_buffer_unmap(struct pvr_winsys_bo *bo, bool reserve);
 
 VkResult pvr_drm_heap_alloc_carveout(struct pvr_winsys_heap *const heap,
+                                     struct pvr_winsys_bo *bo,
                                      const pvr_dev_addr_t carveout_dev_addr,
                                      uint64_t size,
                                      uint64_t alignment,
                                      struct pvr_winsys_vma **vma_out);
 VkResult pvr_drm_winsys_heap_alloc(struct pvr_winsys_heap *heap,
+                                   struct pvr_winsys_bo *bo,
                                    uint64_t size,
                                    uint64_t alignment,
                                    struct pvr_winsys_vma **vma_out);

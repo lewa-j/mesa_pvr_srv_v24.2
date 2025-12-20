@@ -373,7 +373,7 @@ VkResult pvr_bo_alloc(struct pvr_device *device,
       VG(VALGRIND_MAKE_MEM_DEFINED(pvr_bo->bo->map, pvr_bo->bo->size));
    }
 
-   result = device->ws->ops->heap_alloc(heap, size, alignment, &pvr_bo->vma);
+   result = device->ws->ops->heap_alloc(heap, pvr_bo->bo, size, alignment, &pvr_bo->vma);
    if (result != VK_SUCCESS)
       goto err_buffer_unmap;
 

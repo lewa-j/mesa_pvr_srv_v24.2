@@ -373,6 +373,7 @@ struct pvr_winsys_ops {
    VkResult (*buffer_unmap)(struct pvr_winsys_bo *bo, bool reserve);
 
    VkResult (*heap_alloc)(struct pvr_winsys_heap *heap,
+                          struct pvr_winsys_bo *bo,
                           uint64_t size,
                           uint64_t alignment,
                           struct pvr_winsys_vma **vma_out);
