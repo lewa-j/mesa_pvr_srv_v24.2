@@ -42,14 +42,15 @@ static const char *pvr_srv_error_to_str(enum pvr_srv_error err)
 {
    switch(err)
    {
-#define X(e) case PVR_SRV_##e: return #e;
-   X(OK)
-   X(ERROR_RETRY)
-   X(ERROR_DDK_VERSION_MISMATCH)
-   X(ERROR_DDK_BUILD_MISMATCH)
-   X(ERROR_BUILD_OPTIONS_MISMATCH)
-   X(ERROR_BRIDGE_CALL_FAILED)
-   X(ERROR_BRIDGE_ARRAY_SIZE_TOO_BIG)
+#define X(e) case PVR_SRV_##e: return #e
+   X(OK);
+   X(ERROR_RETRY);
+   X(ERROR_DDK_VERSION_MISMATCH);
+   X(ERROR_DDK_BUILD_MISMATCH);
+   X(ERROR_BUILD_OPTIONS_MISMATCH);
+   X(ERROR_BRIDGE_CALL_FAILED);
+   X(ERROR_HANDLE_INDEX_OUT_OF_RANGE);
+   X(ERROR_BRIDGE_ARRAY_SIZE_TOO_BIG);
 #undef X
    default:
    }
