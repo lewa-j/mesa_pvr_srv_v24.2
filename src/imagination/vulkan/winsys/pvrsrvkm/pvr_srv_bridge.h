@@ -485,16 +485,11 @@ struct pvr_srv_pmr_unref_unlock_pmr_ret {
  ******************************************************************************/
 
 struct pvr_srv_devmem_int_map_pages_cmd {
-#if 0//v1.17
    pvr_dev_addr_t addr;
-#endif
    void *pmr;
    void *reservation;
    uint32_t page_count;
    uint32_t page_offset;
-#if 1//v24.2
-   uint32_t virt_page_offset;
-#endif
    uint64_t flags;
 } PACKED;
 
@@ -507,14 +502,9 @@ struct pvr_srv_devmem_int_map_pages_ret {
  ******************************************************************************/
 
 struct pvr_srv_devmem_int_unmap_pages_cmd {
-#if 0//v1.17
    pvr_dev_addr_t dev_addr;
-#endif
    void *reservation;
    uint32_t page_count;
-#if 1//v24.2
-   uint32_t virt_page_offset;
-#endif
 } PACKED;
 
 struct pvr_srv_devmem_int_unmap_pages_ret {

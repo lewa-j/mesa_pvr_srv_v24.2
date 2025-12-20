@@ -398,6 +398,7 @@ VkResult pvr_srv_heap_alloc_carveout(struct pvr_winsys_heap *heap,
                                      srv_heap->server_heap,
                                      carveout_dev_addr,
                                      size,
+                                     0,//TODO flags
                                      &srv_vma->reservation);
    if (result != VK_SUCCESS)
       goto err_vk_free_srv_vma;
@@ -448,6 +449,7 @@ VkResult pvr_srv_winsys_heap_alloc(struct pvr_winsys_heap *heap,
                                      srv_heap->server_heap,
                                      srv_vma->base.dev_addr,
                                      srv_vma->base.size,
+                                     0,//TODO flags
                                      &srv_vma->reservation);
    if (result != VK_SUCCESS)
       goto err_pvr_srv_free_allocation;
@@ -609,7 +611,7 @@ void pvr_srv_winsys_vma_unmap(struct pvr_winsys_vma *vma)
                               vma->dev_addr,
                               vma->mapped_size >> srv_ws->base.log2_page_size);
 #else
-      pvr_srv_int_unmap_pmr(srv_ws->base.render_fd, srv_vma->reservation);//reservation no mapping!
+      pvr_srv_int_unmap_pmr(srv_ws->base.render_fd, srv_vma->reservation);//reservation not mapping!
 #endif
    }
 
