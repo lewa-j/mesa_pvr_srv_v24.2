@@ -749,7 +749,7 @@ struct pvr_srv_rgx_create_hwrt_dataset_cmd {
    const pvr_dev_addr_t *vheap_table_dev_adds;
    /* ROGUE_FWIF_NUM_RTDATAS sized array of handles. */
    void **hwrt_dataset;
-   /* ROGUE_FW_MAX_FREELISTS size array of handles. */
+   /* ROGUE_FWIF_NUM_RTDATA_FREELISTS size array of handles. */
    void **free_lists;
    uint32_t isp_merge_lower_x;
    uint32_t isp_merge_lower_y;

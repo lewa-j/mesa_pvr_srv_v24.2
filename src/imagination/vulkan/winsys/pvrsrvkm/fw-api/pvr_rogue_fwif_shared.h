@@ -30,10 +30,17 @@
 #include "util/macros.h"
 
 /** Indicates the number of RTDATAs per RTDATASET. */
+#if 0//v1.17
 #define ROGUE_FWIF_NUM_RTDATAS 2U
 #define ROGUE_FWIF_NUM_GEOMDATAS 1U
 #define ROGUE_FWIF_NUM_RTDATA_FREELISTS 2U
 #define ROGUE_NUM_GEOM_CORES 1U
+#else//v24.2
+#define ROGUE_FWIF_NUM_RTDATAS 4U
+#define ROGUE_FWIF_NUM_GEOMDATAS 4U
+#define ROGUE_FWIF_NUM_RTDATA_FREELISTS 12U
+#define ROGUE_NUM_GEOM_CORES 2U
+#endif
 
 #define ROGUE_NUM_GEOM_CORES_SIZE 2U
 
@@ -197,8 +204,7 @@ struct rogue_fwif_cccb_ctl {
 
 #define ROGUE_FW_LOCAL_FREELIST 0U
 #define ROGUE_FW_GLOBAL_FREELIST 1U
-#define ROGUE_FW_MAX_FREELISTS (ROGUE_FW_GLOBAL_FREELIST + 1U)
-#define ROGUE_FW_MAX_HWFREELISTS 2U
+// check ROGUE_FWIF_NUM_RTDATA_FREELISTS
 
 /**
  * \brief Geom DM or TA register controls for context switch.

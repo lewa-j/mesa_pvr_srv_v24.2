@@ -399,7 +399,7 @@ VkResult pvr_srv_render_target_dataset_create(
    struct pvr_srv_winsys *srv_ws = to_pvr_srv_winsys(ws);
    struct pvr_srv_winsys_free_list *srv_local_free_list =
       to_pvr_srv_winsys_free_list(create_info->local_free_list);
-   void *free_lists[ROGUE_FW_MAX_FREELISTS] = { NULL };
+   void *free_lists[ROGUE_FWIF_NUM_RTDATA_FREELISTS] = { NULL };
    struct pvr_srv_winsys_rt_dataset *srv_rt_dataset;
    void *handles[ROGUE_FWIF_NUM_RTDATAS];
    struct pvr_rogue_cr_te rogue_te_regs;
@@ -424,9 +424,14 @@ VkResult pvr_srv_render_target_dataset_create(
    /* If greater than 1 we'll have to pass in an array. For now just passing in
     * the reference.
     */
-   STATIC_ASSERT(ROGUE_FWIF_NUM_GEOMDATAS == 1);
+   //STATIC_ASSERT(ROGUE_FWIF_NUM_GEOMDATAS == 1);
+   pvr_dev_addr_t rtc[ROGUE_FWIF_NUM_GEOMDATAS] = {create_info->rtc_dev_addr};
+   pvr_dev_addr_t tpc[ROGUE_FWIF_NUM_GEOMDATAS] = {create_info->tpc_dev_addr};
+   pvr_dev_addr_t vheap_table[ROGUE_FWIF_NUM_GEOMDATAS] = {create_info->vheap_table_dev_addr};
+
    /* If not 2 the arrays used in the bridge call will require updating. */
-   STATIC_ASSERT(ROGUE_FWIF_NUM_RTDATAS == 2);
+   // v24.2 has 4
+   STATIC_ASSERT(ROGUE_FWIF_NUM_RTDATAS == ROGUE_NUM_RTDATAS);
 
    pvr_rt_mtile_info_init(dev_info,
                           &mtile_info,
@@ -449,10 +454,10 @@ VkResult pvr_srv_render_target_dataset_create(
       pvr_rogue_get_cr_multisamplectl_val(create_info->samples, false),
       macrotile_addrs,
       pm_mlist_addrs,
-      &create_info->rtc_dev_addr,
+      rtc,
       rgn_header_addrs,
-      &create_info->tpc_dev_addr,
-      &create_info->vheap_table_dev_addr,
+      tpc,
+      vheap_table,
       free_lists,
       create_info->isp_merge_lower_x,
       create_info->isp_merge_lower_y,
@@ -477,6 +482,10 @@ VkResult pvr_srv_render_target_dataset_create(
 
    srv_rt_dataset->rt_datas[0].handle = handles[0];
    srv_rt_dataset->rt_datas[1].handle = handles[1];
+#if 1//v24.2
+   srv_rt_dataset->rt_datas[2].handle = handles[2];
+   srv_rt_dataset->rt_datas[3].handle = handles[3];
+#endif
 
    for (uint32_t i = 0; i < ARRAY_SIZE(srv_rt_dataset->rt_datas); i++) {
       srv_rt_dataset->rt_datas[i].sync_prim = pvr_srv_sync_prim_alloc(srv_ws);

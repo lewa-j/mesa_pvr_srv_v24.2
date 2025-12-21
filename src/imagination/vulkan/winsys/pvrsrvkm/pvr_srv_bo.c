@@ -521,7 +521,7 @@ VkResult pvr_srv_winsys_vma_map(struct pvr_winsys_vma *vma,
       ALIGN_POT(virt_offset + size, vma->heap->page_size);
    if (offset != 0 || bo->size != ALIGN_POT(size, srv_ws->base.page_size) ||
           vma->size != bo->size) {
-      printf("pvr_srv_winsys_vma_map(%" PRIu64 " %" PRIu64 ") virt_offset %u", offset, size, virt_offset);
+      mesa_loge("pvr_srv_winsys_vma_map(%" PRIu64 " %" PRIu64 ") virt_offset %u", offset, size, virt_offset);
    }
 
    VkResult result;

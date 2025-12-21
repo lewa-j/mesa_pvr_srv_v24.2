@@ -1316,6 +1316,12 @@ pvr_srv_rgx_create_hwrt_dataset(int fd,
 
    int result;
 
+   mesa_logd("pvr_srv_rgx_create_hwrt_dataset: free_lists %p", free_lists);
+   for (int i = 0; i < ROGUE_FWIF_NUM_RTDATA_FREELISTS; i++)
+   {
+      mesa_logd(" free_lists[%d] %p", i, free_lists[i]);
+   }
+
    result = pvr_srv_bridge_call(fd,
                                 PVR_SRV_BRIDGE_RGXTA3D,
                                 PVR_SRV_BRIDGE_RGXTA3D_RGXCREATEHWRTDATASET,
@@ -1415,6 +1421,7 @@ VkResult pvr_srv_rgx_create_free_list(int fd,
                            ret);
    }
 
+   mesa_logd("pvr_srv_rgx_create_free_list %p", ret.cleanup_cookie);
    *cleanup_cookie_out = ret.cleanup_cookie;
 
    return VK_SUCCESS;

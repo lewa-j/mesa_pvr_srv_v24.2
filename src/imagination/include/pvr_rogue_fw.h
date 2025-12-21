@@ -34,6 +34,9 @@
  * information should really be queried from the winsys.
  */
 /* Indicates the number of Render Target Datas in a Render Target Dataset. */
+#if 0//v1.17
 #define ROGUE_NUM_RTDATAS 2U
-
+#else//v24.2
+#define ROGUE_NUM_RTDATAS 4U
+#endif
 #endif /* PVR_ROGUE_FW_H */

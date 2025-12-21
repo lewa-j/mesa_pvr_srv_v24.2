@@ -360,7 +360,7 @@ VkResult pvr_drm_render_target_dataset_create(
    struct pvr_drm_winsys_rt_dataset *drm_rt_dataset;
    VkResult result;
 
-   STATIC_ASSERT(ARRAY_SIZE(args.rt_data_args) ==
+   STATIC_ASSERT(ARRAY_SIZE(args.rt_data_args) <=
                  ARRAY_SIZE(create_info->rt_datas));
 
    drm_rt_dataset = vk_zalloc(ws->alloc,
