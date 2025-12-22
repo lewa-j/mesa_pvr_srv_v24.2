@@ -413,6 +413,16 @@ VkResult pvr_srv_render_target_dataset_create(
       free_lists[ROGUE_FW_GLOBAL_FREELIST] =
          srv_local_free_list->parent->handle;
    }
+#if 1//v24.2
+   // DIRTY HACK
+   free_lists[ROGUE_FW_GLOBAL2_FREELIST] = free_lists[ROGUE_FW_GLOBAL_FREELIST];
+   for (int i = 1; i < ROGUE_FWIF_NUM_GEOMDATAS; i++)
+   {
+      free_lists[i * 3 + 0] = free_lists[0];
+      free_lists[i * 3 + 1] = free_lists[1];
+      free_lists[i * 3 + 2] = free_lists[2];
+   }
+#endif
 
    srv_rt_dataset = vk_zalloc(ws->alloc,
                               sizeof(*srv_rt_dataset),

@@ -204,6 +204,7 @@ struct rogue_fwif_cccb_ctl {
 
 #define ROGUE_FW_LOCAL_FREELIST 0U
 #define ROGUE_FW_GLOBAL_FREELIST 1U
+#define ROGUE_FW_GLOBAL2_FREELIST 2U
 // check ROGUE_FWIF_NUM_RTDATA_FREELISTS
 
 /**
