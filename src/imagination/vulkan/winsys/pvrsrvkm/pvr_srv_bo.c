@@ -608,20 +608,21 @@ void pvr_srv_winsys_vma_unmap(struct pvr_winsys_vma *vma)
 
    srv_bo = to_pvr_srv_winsys_bo(vma->bo);
 
+#if 0//v1.17
    if (srv_bo->is_display_buffer) {
       /* Unmap the requested pmr */
       pvr_srv_int_unmap_pmr(srv_ws->base.render_fd, srv_vma->mapping);
    } else {
-#if 0//v1.17
+
       /* Unmap requested pages */
       pvr_srv_int_unmap_pages(srv_ws->base.render_fd,
                               srv_vma->reservation,
                               vma->dev_addr,
                               vma->mapped_size >> srv_ws->base.log2_page_size);
-#else
-      pvr_srv_int_unmap_pmr(srv_ws->base.render_fd, srv_vma->reservation);//reservation not mapping!
-#endif
    }
+#else
+   pvr_srv_int_unmap_pmr(srv_ws->base.render_fd, srv_vma->reservation);//reservation not mapping!
+#endif
 
    buffer_release(srv_bo);
 
