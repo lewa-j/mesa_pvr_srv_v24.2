@@ -95,8 +95,8 @@
 //#define PVR_SRV_BRIDGE_MM_DEVMEMINTUNRESERVERANGE PVR_SRV_BRIDGE_MM_DEVMEMXINTUNRESERVERANGE
 #define PVR_SRV_BRIDGE_MM_DEVMEMINTMAPPAGES PVR_SRV_BRIDGE_MM_DEVMEMXINTMAPPAGES
 #define PVR_SRV_BRIDGE_MM_DEVMEMINTUNMAPPAGES PVR_SRV_BRIDGE_MM_DEVMEMXINTUNMAPPAGES
-
 #endif
+
 #define PVR_SRV_BRIDGE_DMABUF 11UL
 
 #define PVR_SRV_BRIDGE_DMABUF_PHYSMEMIMPORTDMABUF 0UL
@@ -913,10 +913,12 @@ struct pvr_srv_rgx_kick_ta3d2_cmd {
    void **client_ta_fence_sync_prim_block;
    void **client_ta_update_sync_prim_block;
    void **sync_pmrs;
+#if 0//v1.17
    enum pvr_srv_bool abort;
    enum pvr_srv_bool kick_3d;
    enum pvr_srv_bool kick_pr;
    enum pvr_srv_bool kick_ta;
+#endif
    int32_t check_fence;
    int32_t check_fence_3d;
    int32_t update_timeline;
@@ -936,6 +938,12 @@ struct pvr_srv_rgx_kick_ta3d2_cmd {
    uint32_t render_target_size;
    uint32_t sync_pmr_count;
    uint32_t cmd_ta_size;
+#if 1//v24.2
+   bool abort;
+   bool kick_3d;
+   bool kick_pr;
+   bool kick_ta;
+#endif
 } PACKED;
 
 struct pvr_srv_rgx_kick_ta3d2_ret {
