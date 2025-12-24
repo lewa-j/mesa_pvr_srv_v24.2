@@ -56,6 +56,9 @@ struct pvr_device {
    struct pvr_winsys_heaps heaps;
 
    struct pvr_free_list *global_free_list;
+#if 1//v24.2
+   struct pvr_free_list *global2_free_list;
+#endif
 
    struct pvr_queue *queues;
    uint32_t queue_count;

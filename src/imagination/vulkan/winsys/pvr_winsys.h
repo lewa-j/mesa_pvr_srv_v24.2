@@ -154,6 +154,10 @@ struct pvr_winsys_rt_dataset_create_info {
    uint32_t isp_merge_upper_x;
    uint32_t isp_merge_upper_y;
 
+#if 1//v24.2
+   struct pvr_winsys_free_list *global2_free_list;
+#endif
+
    struct {
       /* Local freelist */
       struct pvr_winsys_free_list *local_free_list;

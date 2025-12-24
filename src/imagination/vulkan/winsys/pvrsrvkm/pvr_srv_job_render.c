@@ -396,6 +396,9 @@ VkResult pvr_srv_render_target_dataset_create(
 #if 0//v1.17
    struct pvr_srv_winsys_free_list *srv_local_free_list =
       to_pvr_srv_winsys_free_list(create_info->geom_datas[0].local_free_list);
+#else
+   struct pvr_srv_winsys_free_list *srv_global2_free_list =
+      to_pvr_srv_winsys_free_list(create_info->global2_free_list);
 #endif
    void *free_lists[ROGUE_FWIF_NUM_RTDATA_FREELISTS] = { NULL };
    struct pvr_srv_winsys_rt_dataset *srv_rt_dataset;
@@ -431,13 +434,13 @@ VkResult pvr_srv_render_target_dataset_create(
    {
       struct pvr_srv_winsys_free_list *srv_local_free_list =
          to_pvr_srv_winsys_free_list(create_info->geom_datas[i].local_free_list);
+
       free_lists[i * 3 + ROGUE_FW_LOCAL_FREELIST] = srv_local_free_list->handle;
       if (srv_local_free_list->parent) {
          free_lists[i * 3 + ROGUE_FW_GLOBAL_FREELIST] =
             srv_local_free_list->parent->handle;
       }
-      // DIRTY HACK
-      free_lists[i * 3 + ROGUE_FW_GLOBAL2_FREELIST] = free_lists[i * 3 + ROGUE_FW_GLOBAL_FREELIST];
+      free_lists[i * 3 + ROGUE_FW_GLOBAL2_FREELIST] = srv_global2_free_list->handle;
    }
 #endif
 

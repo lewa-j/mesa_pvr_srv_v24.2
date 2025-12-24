@@ -898,9 +898,21 @@ pvr_create_device(struct pvr_physical_device *pdevice,
    if (result != VK_SUCCESS)
       goto err_dec_device_count;
 
-   result = pvr_device_init_nop_program(device);
+#if 1//v24.2
+   result = pvr_free_list_create(device,
+                                 initial_free_list_size,
+                                 PVR_GLOBAL_FREE_LIST_MAX_SIZE,
+                                 PVR_GLOBAL_FREE_LIST_GROW_SIZE,
+                                 PVR_GLOBAL_FREE_LIST_GROW_THRESHOLD,
+                                 NULL /* parent_free_list */,
+                                 &device->global2_free_list);
    if (result != VK_SUCCESS)
       goto err_pvr_free_list_destroy;
+#endif
+
+   result = pvr_device_init_nop_program(device);
+   if (result != VK_SUCCESS)
+      goto err_pvr_free_list2_destroy;
 
    result = pvr_device_init_compute_fence_program(device);
    if (result != VK_SUCCESS)
@@ -998,6 +1010,10 @@ err_pvr_free_nop_program:
    pvr_bo_suballoc_free(device->nop_program.pds.pvr_bo);
    pvr_bo_suballoc_free(device->nop_program.usc);
 
+err_pvr_free_list2_destroy:
+#if 1//v24.2
+   pvr_free_list_destroy(device->global2_free_list);
+#endif
 err_pvr_free_list_destroy:
    pvr_free_list_destroy(device->global_free_list);
 
@@ -1050,6 +1066,9 @@ pvr_destroy_device(struct pvr_device *device,
    pvr_bo_suballoc_free(device->nop_program.pds.pvr_bo);
    pvr_bo_suballoc_free(device->nop_program.usc);
    pvr_free_list_destroy(device->global_free_list);
+#if 1//v24.2
+   pvr_free_list_destroy(device->global2_free_list);
+#endif
    pvr_bo_suballocator_fini(&device->suballoc_vis_test);
    pvr_bo_suballocator_fini(&device->suballoc_usc);
    pvr_bo_suballocator_fini(&device->suballoc_transfer);

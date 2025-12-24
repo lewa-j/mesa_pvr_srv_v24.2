@@ -106,6 +106,9 @@ struct pvr_rt_dataset {
    uint32_t layers;
 
    struct pvr_free_list *global_free_list;
+#if 1//v24.2
+   struct pvr_free_list *global2_free_list;
+#endif
 
    struct pvr_bo *vheap_rtc_bo;
 
@@ -869,6 +872,10 @@ static void pvr_rt_dataset_ws_create_info_init(
       create_info->isp_merge_scale_y = fui(value);
    }
 
+#if 1//v24.2
+   create_info->global2_free_list = rt_dataset->global2_free_list->ws_free_list;
+#endif
+
    /* Allocations and associated information. */
    create_info->tpc_stride = rt_dataset->tpc_stride;
    create_info->tpc_size = rt_dataset->tpc_size;
@@ -935,6 +942,9 @@ pvr_render_target_dataset_create(struct pvr_device *device,
    rt_dataset->samples = samples;
    rt_dataset->layers = layers;
    rt_dataset->global_free_list = device->global_free_list;
+#if 1//v24.2
+   rt_dataset->global2_free_list = device->global2_free_list;
+#endif
 
    /* The maximum supported free list size is based on the assumption that this
     * freelist (the "local" freelist) is always the minimum size required by
