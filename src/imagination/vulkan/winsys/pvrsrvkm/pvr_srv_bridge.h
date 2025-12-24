@@ -100,7 +100,11 @@
 #define PVR_SRV_BRIDGE_DMABUF 11UL
 
 #define PVR_SRV_BRIDGE_DMABUF_PHYSMEMIMPORTDMABUF 0UL
+#if 0//v1.17
 #define PVR_SRV_BRIDGE_DMABUF_PHYSMEMEXPORTDMABUF 2UL
+#else//v24.2
+#define PVR_SRV_BRIDGE_DMABUF_PHYSMEMEXPORTDMABUF 1UL
+#endif
 
 #define PVR_SRV_BRIDGE_RGXTQ 128UL
 
@@ -713,6 +717,9 @@ struct pvr_srv_rgx_kick_cdm2_cmd {
    void **client_update_ufo_sync_prim_block;
    void **sync_pmrs;
    int32_t check_fence;
+#if 1//v24.2
+   int32_t export_fence_to_signal;
+#endif
    int32_t update_timeline;
    uint32_t client_update_count;
    uint32_t cmd_size;
@@ -726,6 +733,9 @@ struct pvr_srv_rgx_kick_cdm2_cmd {
 struct pvr_srv_rgx_kick_cdm2_ret {
    enum pvr_srv_error error;
    int32_t update_fence;
+#if 1//v24.2
+   uint32_t int_job_ref;
+#endif
 } PACKED;
 
 /******************************************************************************
