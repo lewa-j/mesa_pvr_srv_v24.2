@@ -141,9 +141,6 @@ struct pvr_winsys_free_list {
 };
 
 struct pvr_winsys_rt_dataset_create_info {
-   /* Local freelist */
-   struct pvr_winsys_free_list *local_free_list;
-
    uint32_t width;
    uint32_t height;
    uint32_t samples;
@@ -157,11 +154,15 @@ struct pvr_winsys_rt_dataset_create_info {
    uint32_t isp_merge_upper_x;
    uint32_t isp_merge_upper_y;
 
-   /* Allocations and associated information */
-   pvr_dev_addr_t vheap_table_dev_addr;
-   pvr_dev_addr_t rtc_dev_addr;
+   struct {
+      /* Local freelist */
+      struct pvr_winsys_free_list *local_free_list;
+      /* Allocations and associated information */
+      pvr_dev_addr_t vheap_table_dev_addr;
+      pvr_dev_addr_t rtc_dev_addr;
+      pvr_dev_addr_t tpc_dev_addr;
+   } geom_datas[ROGUE_NUM_GEOMDATAS];
 
-   pvr_dev_addr_t tpc_dev_addr;
    uint32_t tpc_stride;
    uint32_t tpc_size;
 

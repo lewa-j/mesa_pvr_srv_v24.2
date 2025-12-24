@@ -101,8 +101,10 @@ VkResult pvr_srv_winsys_free_list_create(
    struct pvr_winsys_free_list **const free_list_out)
 {
    struct pvr_srv_winsys *srv_ws = to_pvr_srv_winsys(ws);
+#if 0//v1.17
    struct pvr_srv_winsys_bo *srv_free_list_bo =
       to_pvr_srv_winsys_bo(free_list_vma->bo);
+#endif
    struct pvr_srv_winsys_vma *srv_vma = to_pvr_srv_winsys_vma(free_list_vma);
    struct pvr_srv_winsys_free_list *srv_free_list;
    void *parent_handle;
@@ -383,22 +385,18 @@ VkResult pvr_srv_render_target_dataset_create(
    const struct pvr_device_info *dev_info,
    struct pvr_winsys_rt_dataset **const rt_dataset_out)
 {
-   const pvr_dev_addr_t macrotile_addrs[ROGUE_FWIF_NUM_RTDATAS] = {
-      [0] = create_info->rt_datas[0].macrotile_array_dev_addr,
-      [1] = create_info->rt_datas[1].macrotile_array_dev_addr,
-   };
-   const pvr_dev_addr_t pm_mlist_addrs[ROGUE_FWIF_NUM_RTDATAS] = {
-      [0] = create_info->rt_datas[0].pm_mlist_dev_addr,
-      [1] = create_info->rt_datas[1].pm_mlist_dev_addr,
-   };
-   const pvr_dev_addr_t rgn_header_addrs[ROGUE_FWIF_NUM_RTDATAS] = {
-      [0] = create_info->rt_datas[0].rgn_header_dev_addr,
-      [1] = create_info->rt_datas[1].rgn_header_dev_addr,
-   };
+   pvr_dev_addr_t macrotile_addrs[ROGUE_FWIF_NUM_RTDATAS] = {};
+   pvr_dev_addr_t pm_mlist_addrs[ROGUE_FWIF_NUM_RTDATAS] = {};
+   pvr_dev_addr_t rgn_header_addrs[ROGUE_FWIF_NUM_RTDATAS] = {};
+   pvr_dev_addr_t rtc_addrs[ROGUE_FWIF_NUM_GEOMDATAS] = {};
+   pvr_dev_addr_t tpc_addrs[ROGUE_FWIF_NUM_GEOMDATAS] = {};
+   pvr_dev_addr_t vheap_table_addrs[ROGUE_FWIF_NUM_GEOMDATAS] = {};
 
    struct pvr_srv_winsys *srv_ws = to_pvr_srv_winsys(ws);
+#if 0//v1.17
    struct pvr_srv_winsys_free_list *srv_local_free_list =
-      to_pvr_srv_winsys_free_list(create_info->local_free_list);
+      to_pvr_srv_winsys_free_list(create_info->geom_datas[0].local_free_list);
+#endif
    void *free_lists[ROGUE_FWIF_NUM_RTDATA_FREELISTS] = { NULL };
    struct pvr_srv_winsys_rt_dataset *srv_rt_dataset;
    void *handles[ROGUE_FWIF_NUM_RTDATAS];
@@ -407,20 +405,39 @@ VkResult pvr_srv_render_target_dataset_create(
    uint32_t isp_mtile_size;
    VkResult result;
 
+   for (int i = 0; i < ROGUE_FWIF_NUM_RTDATAS; i++)
+   {
+      macrotile_addrs[i] = create_info->rt_datas[i].macrotile_array_dev_addr;
+      pm_mlist_addrs[i] = create_info->rt_datas[i].pm_mlist_dev_addr;
+      rgn_header_addrs[i] = create_info->rt_datas[i].rgn_header_dev_addr;
+   }
+
+   for (int i = 0; i < ROGUE_FWIF_NUM_GEOMDATAS; i++)
+   {
+      rtc_addrs[i] = create_info->geom_datas[i].rtc_dev_addr;
+      tpc_addrs[i] = create_info->geom_datas[i].tpc_dev_addr;
+      vheap_table_addrs[i] = create_info->geom_datas[i].vheap_table_dev_addr;
+   }
+
+#if 0//v1.17
    free_lists[ROGUE_FW_LOCAL_FREELIST] = srv_local_free_list->handle;
 
    if (srv_local_free_list->parent) {
       free_lists[ROGUE_FW_GLOBAL_FREELIST] =
          srv_local_free_list->parent->handle;
    }
-#if 1//v24.2
-   // DIRTY HACK
-   free_lists[ROGUE_FW_GLOBAL2_FREELIST] = free_lists[ROGUE_FW_GLOBAL_FREELIST];
-   for (int i = 1; i < ROGUE_FWIF_NUM_GEOMDATAS; i++)
+#else//v24.2
+   for (int i = 0; i < ROGUE_FWIF_NUM_GEOMDATAS; i++)
    {
-      free_lists[i * 3 + 0] = free_lists[0];
-      free_lists[i * 3 + 1] = free_lists[1];
-      free_lists[i * 3 + 2] = free_lists[2];
+      struct pvr_srv_winsys_free_list *srv_local_free_list =
+         to_pvr_srv_winsys_free_list(create_info->geom_datas[i].local_free_list);
+      free_lists[i * 3 + ROGUE_FW_LOCAL_FREELIST] = srv_local_free_list->handle;
+      if (srv_local_free_list->parent) {
+         free_lists[i * 3 + ROGUE_FW_GLOBAL_FREELIST] =
+            srv_local_free_list->parent->handle;
+      }
+      // DIRTY HACK
+      free_lists[i * 3 + ROGUE_FW_GLOBAL2_FREELIST] = free_lists[i * 3 + ROGUE_FW_GLOBAL_FREELIST];
    }
 #endif
 
@@ -435,9 +452,6 @@ VkResult pvr_srv_render_target_dataset_create(
     * the reference.
     */
    //STATIC_ASSERT(ROGUE_FWIF_NUM_GEOMDATAS == 1);
-   pvr_dev_addr_t rtc[ROGUE_FWIF_NUM_GEOMDATAS] = {create_info->rtc_dev_addr};
-   pvr_dev_addr_t tpc[ROGUE_FWIF_NUM_GEOMDATAS] = {create_info->tpc_dev_addr};
-   pvr_dev_addr_t vheap_table[ROGUE_FWIF_NUM_GEOMDATAS] = {create_info->vheap_table_dev_addr};
 
    /* If not 2 the arrays used in the bridge call will require updating. */
    // v24.2 has 4
@@ -464,10 +478,10 @@ VkResult pvr_srv_render_target_dataset_create(
       pvr_rogue_get_cr_multisamplectl_val(create_info->samples, false),
       macrotile_addrs,
       pm_mlist_addrs,
-      rtc,
+      rtc_addrs,
       rgn_header_addrs,
-      tpc,
-      vheap_table,
+      tpc_addrs,
+      vheap_table_addrs,
       free_lists,
       create_info->isp_merge_lower_x,
       create_info->isp_merge_lower_y,

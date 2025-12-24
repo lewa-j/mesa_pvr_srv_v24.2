@@ -106,11 +106,8 @@ struct pvr_rt_dataset {
    uint32_t layers;
 
    struct pvr_free_list *global_free_list;
-   struct pvr_free_list *local_free_list;
 
    struct pvr_bo *vheap_rtc_bo;
-   pvr_dev_addr_t vheap_dev_addr;
-   pvr_dev_addr_t rtc_dev_addr;
 
    struct pvr_bo *tpc_bo;
    uint64_t tpc_stride;
@@ -129,6 +126,12 @@ struct pvr_rt_dataset {
 
    uint8_t rt_data_idx;
 
+   struct {
+      pvr_dev_addr_t vheap_dev_addr;
+      pvr_dev_addr_t rtc_dev_addr;
+      pvr_dev_addr_t tpc_dev_addr;
+      struct pvr_free_list *local_free_list;
+   } geom_datas[ROGUE_NUM_GEOMDATAS];
    struct {
       pvr_dev_addr_t mta_dev_addr;
       pvr_dev_addr_t mlist_dev_addr;
@@ -399,17 +402,21 @@ static VkResult pvr_rt_vheap_rtc_data_init(struct pvr_device *device,
                                            struct pvr_rt_dataset *rt_dataset,
                                            uint32_t layers)
 {
+   const uint32_t num_geom_datas = ARRAY_SIZE(rt_dataset->geom_datas);
+   pvr_dev_addr_t dev_addr;
    uint64_t vheap_size;
+   uint64_t rtc_offset;
    uint32_t alignment;
    uint64_t rtc_size;
    VkResult result;
 
    vheap_size = ROGUE_CR_PM_VHEAP_TABLE_SIZE * ROGUE_PM_VHEAP_ENTRY_SIZE;
+   rtc_offset = vheap_size * num_geom_datas;
 
    if (layers > 1) {
       uint64_t rtc_entries;
 
-      vheap_size = ALIGN_POT(vheap_size, ROGUE_CR_TA_RTC_ADDR_BASE_ALIGNMENT);
+      rtc_offset = ALIGN_POT(rtc_offset, ROGUE_CR_TA_RTC_ADDR_BASE_ALIGNMENT);
 
       rtc_entries = ROGUE_NUM_TEAC + ROGUE_NUM_TE + ROGUE_NUM_VCE;
       if (PVR_HAS_QUIRK(&device->pdevice->dev_info, 48545))
@@ -425,20 +432,30 @@ static VkResult pvr_rt_vheap_rtc_data_init(struct pvr_device *device,
 
    result = pvr_bo_alloc(device,
                          device->heaps.general_heap,
-                         vheap_size + rtc_size,
+                         rtc_offset + rtc_size,
                          alignment,
                          PVR_BO_ALLOC_FLAG_GPU_UNCACHED,
                          &rt_dataset->vheap_rtc_bo);
    if (result != VK_SUCCESS)
       return result;
 
-   rt_dataset->vheap_dev_addr = rt_dataset->vheap_rtc_bo->vma->dev_addr;
+   dev_addr = rt_dataset->vheap_rtc_bo->vma->dev_addr;
+
+   for (uint32_t i = 0; i < num_geom_datas; i++) {
+      rt_dataset->geom_datas[i].vheap_dev_addr = dev_addr;
+      dev_addr = PVR_DEV_ADDR_OFFSET(dev_addr, vheap_size);
+   }
 
    if (rtc_size > 0) {
-      rt_dataset->rtc_dev_addr =
-         PVR_DEV_ADDR_OFFSET(rt_dataset->vheap_dev_addr, vheap_size);
+      dev_addr = PVR_DEV_ADDR_OFFSET(rt_dataset->vheap_rtc_bo->vma->dev_addr, rtc_offset);
+      for (uint32_t i = 0; i < num_geom_datas; i++) {
+         rt_dataset->geom_datas[i].rtc_dev_addr = dev_addr;
+         dev_addr = PVR_DEV_ADDR_OFFSET(dev_addr, rtc_size);
+      }
    } else {
-      rt_dataset->rtc_dev_addr = PVR_DEV_ADDR_INVALID;
+      for (uint32_t i = 0; i < num_geom_datas; i++) {
+         rt_dataset->geom_datas[i].rtc_dev_addr = PVR_DEV_ADDR_INVALID;
+      }
    }
 
    return VK_SUCCESS;
@@ -446,7 +463,12 @@ static VkResult pvr_rt_vheap_rtc_data_init(struct pvr_device *device,
 
 static void pvr_rt_vheap_rtc_data_fini(struct pvr_rt_dataset *rt_dataset)
 {
-   rt_dataset->rtc_dev_addr = PVR_DEV_ADDR_INVALID;
+   const uint32_t num_geom_datas = ARRAY_SIZE(rt_dataset->geom_datas);
+
+   for (uint32_t i = 0; i < num_geom_datas; i++) {
+      rt_dataset->geom_datas[i].vheap_dev_addr = PVR_DEV_ADDR_INVALID;
+      rt_dataset->geom_datas[i].rtc_dev_addr = PVR_DEV_ADDR_INVALID;
+   }
 
    pvr_bo_free(rt_dataset->device, rt_dataset->vheap_rtc_bo);
    rt_dataset->vheap_rtc_bo = NULL;
@@ -502,21 +524,35 @@ static VkResult pvr_rt_tpc_data_init(struct pvr_device *device,
                                      const struct pvr_rt_mtile_info *mtile_info,
                                      uint32_t layers)
 {
+   const uint32_t num_geom_datas = ARRAY_SIZE(rt_dataset->geom_datas);
+   pvr_dev_addr_t dev_addr;
    uint64_t tpc_size;
+   VkResult result;
 
    pvr_rt_get_tail_ptr_stride_size(device,
                                    mtile_info,
                                    layers,
                                    &rt_dataset->tpc_stride,
                                    &rt_dataset->tpc_size);
-   tpc_size = ALIGN_POT(rt_dataset->tpc_size, ROGUE_TE_TPC_CACHE_LINE_SIZE);
+   tpc_size = ALIGN_POT(rt_dataset->tpc_size * num_geom_datas, ROGUE_TE_TPC_CACHE_LINE_SIZE);
 
-   return pvr_bo_alloc(device,
+   result = pvr_bo_alloc(device,
                        device->heaps.general_heap,
                        tpc_size,
                        ROGUE_CR_TE_TPC_ADDR_BASE_ALIGNMENT,
                        PVR_BO_ALLOC_FLAG_GPU_UNCACHED,
                        &rt_dataset->tpc_bo);
+   if (result != VK_SUCCESS)
+      return result;
+
+   dev_addr = rt_dataset->tpc_bo->vma->dev_addr;
+
+   for (uint32_t i = 0; i < num_geom_datas; i++) {
+      rt_dataset->geom_datas[i].tpc_dev_addr = dev_addr;
+      dev_addr = PVR_DEV_ADDR_OFFSET(dev_addr, rt_dataset->tpc_size);
+   }
+
+   return VK_SUCCESS;
 }
 
 static void pvr_rt_tpc_data_fini(struct pvr_rt_dataset *rt_dataset)
@@ -792,9 +828,6 @@ static void pvr_rt_dataset_ws_create_info_init(
 
    memset(create_info, 0, sizeof(*create_info));
 
-   /* Local freelist. */
-   create_info->local_free_list = rt_dataset->local_free_list->ws_free_list;
-
    create_info->width = rt_dataset->width;
    create_info->height = rt_dataset->height;
    create_info->samples = rt_dataset->samples;
@@ -837,12 +870,19 @@ static void pvr_rt_dataset_ws_create_info_init(
    }
 
    /* Allocations and associated information. */
-   create_info->vheap_table_dev_addr = rt_dataset->vheap_dev_addr;
-   create_info->rtc_dev_addr = rt_dataset->rtc_dev_addr;
-
-   create_info->tpc_dev_addr = rt_dataset->tpc_bo->vma->dev_addr;
    create_info->tpc_stride = rt_dataset->tpc_stride;
    create_info->tpc_size = rt_dataset->tpc_size;
+
+   STATIC_ASSERT(ARRAY_SIZE(create_info->geom_datas) ==
+                 ARRAY_SIZE(rt_dataset->geom_datas));
+   for (uint32_t i = 0; i < ARRAY_SIZE(create_info->geom_datas); i++) {
+      create_info->geom_datas[i].local_free_list = rt_dataset->geom_datas[i].local_free_list->ws_free_list;
+
+      /* Allocations and associated information. */
+      create_info->geom_datas[i].vheap_table_dev_addr = rt_dataset->geom_datas[i].vheap_dev_addr;
+      create_info->geom_datas[i].rtc_dev_addr = rt_dataset->geom_datas[i].rtc_dev_addr;
+      create_info->geom_datas[i].tpc_dev_addr = rt_dataset->geom_datas[i].tpc_dev_addr;
+   }
 
    STATIC_ASSERT(ARRAY_SIZE(create_info->rt_datas) ==
                  ARRAY_SIZE(rt_dataset->rt_datas));
@@ -901,15 +941,21 @@ pvr_render_target_dataset_create(struct pvr_device *device,
     * the hardware. See the documentation of ROGUE_FREE_LIST_MAX_SIZE for more
     * details.
     */
+   struct pvr_free_list *local_free_list = NULL;
    result = pvr_free_list_create(device,
                                  runtime_info->min_free_list_size,
                                  runtime_info->min_free_list_size,
                                  0 /* grow_size */,
                                  0 /* grow_threshold */,
                                  rt_dataset->global_free_list,
-                                 &rt_dataset->local_free_list);
+                                 &local_free_list);
    if (result != VK_SUCCESS)
       goto err_vk_free_rt_dataset;
+
+   //TODO create unique
+   for (uint32_t i = 0; i < ARRAY_SIZE(rt_dataset->geom_datas); i++) {
+      rt_dataset->geom_datas[i].local_free_list = local_free_list;
+   }
 
    result = pvr_rt_vheap_rtc_data_init(device, rt_dataset, layers);
    if (result != VK_SUCCESS)
@@ -922,7 +968,7 @@ pvr_render_target_dataset_create(struct pvr_device *device,
    result = pvr_rt_datas_init(device,
                               rt_dataset,
                               rt_dataset->global_free_list,
-                              rt_dataset->local_free_list,
+                              local_free_list,
                               &mtile_info,
                               layers);
    if (result != VK_SUCCESS)
@@ -957,7 +1003,7 @@ err_pvr_rt_vheap_rtc_data_fini:
    pvr_rt_vheap_rtc_data_fini(rt_dataset);
 
 err_pvr_free_list_destroy:
-   pvr_free_list_destroy(rt_dataset->local_free_list);
+   pvr_free_list_destroy(local_free_list);
 
 err_vk_free_rt_dataset:
    vk_free(&device->vk.alloc, rt_dataset);
@@ -975,7 +1021,8 @@ void pvr_render_target_dataset_destroy(struct pvr_rt_dataset *rt_dataset)
    pvr_rt_tpc_data_fini(rt_dataset);
    pvr_rt_vheap_rtc_data_fini(rt_dataset);
 
-   pvr_free_list_destroy(rt_dataset->local_free_list);
+   //TODO delete all unique
+   pvr_free_list_destroy(rt_dataset->geom_datas[0].local_free_list);
 
    vk_free(&device->vk.alloc, rt_dataset);
 }

@@ -303,7 +303,7 @@ VkResult pvr_drm_render_target_dataset_create(
    struct pvr_winsys_rt_dataset **const rt_dataset_out)
 {
    struct pvr_drm_winsys_free_list *drm_free_list =
-      to_pvr_drm_winsys_free_list(create_info->local_free_list);
+      to_pvr_drm_winsys_free_list(create_info->geom_datas[0].local_free_list);
 
    /* 0 is just a placeholder. It doesn't indicate an invalid handle. */
    uint32_t parent_free_list_handle =
@@ -311,11 +311,11 @@ VkResult pvr_drm_render_target_dataset_create(
 
    struct drm_pvr_ioctl_create_hwrt_dataset_args args = {
       .geom_data_args = {
-         .tpc_dev_addr = create_info->tpc_dev_addr.addr,
+         .tpc_dev_addr = create_info->geom_datas[0].tpc_dev_addr.addr,
          .tpc_size = create_info->tpc_size,
          .tpc_stride = create_info->tpc_stride,
-         .vheap_table_dev_addr = create_info->vheap_table_dev_addr.addr,
-         .rtc_dev_addr = create_info->rtc_dev_addr.addr,
+         .vheap_table_dev_addr = create_info->geom_datas[0].vheap_table_dev_addr.addr,
+         .rtc_dev_addr = create_info->geom_datas[0].rtc_dev_addr.addr,
       },
 
       .rt_data_args = {
