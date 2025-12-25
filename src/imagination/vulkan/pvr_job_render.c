@@ -951,20 +951,17 @@ pvr_render_target_dataset_create(struct pvr_device *device,
     * the hardware. See the documentation of ROGUE_FREE_LIST_MAX_SIZE for more
     * details.
     */
-   struct pvr_free_list *local_free_list = NULL;
-   result = pvr_free_list_create(device,
+   uint32_t free_list_count = 0;
+   for (; free_list_count < ARRAY_SIZE(rt_dataset->geom_datas); free_list_count++) {
+      result = pvr_free_list_create(device,
                                  runtime_info->min_free_list_size,
                                  runtime_info->min_free_list_size,
                                  0 /* grow_size */,
                                  0 /* grow_threshold */,
                                  rt_dataset->global_free_list,
-                                 &local_free_list);
-   if (result != VK_SUCCESS)
-      goto err_vk_free_rt_dataset;
-
-   //TODO create unique
-   for (uint32_t i = 0; i < ARRAY_SIZE(rt_dataset->geom_datas); i++) {
-      rt_dataset->geom_datas[i].local_free_list = local_free_list;
+                                 &rt_dataset->geom_datas[free_list_count].local_free_list);
+      if (result != VK_SUCCESS)
+         goto err_vk_free_rt_dataset;
    }
 
    result = pvr_rt_vheap_rtc_data_init(device, rt_dataset, layers);
@@ -978,7 +975,7 @@ pvr_render_target_dataset_create(struct pvr_device *device,
    result = pvr_rt_datas_init(device,
                               rt_dataset,
                               rt_dataset->global_free_list,
-                              local_free_list,
+                              rt_dataset->geom_datas[0].local_free_list,
                               &mtile_info,
                               layers);
    if (result != VK_SUCCESS)
@@ -1013,7 +1010,9 @@ err_pvr_rt_vheap_rtc_data_fini:
    pvr_rt_vheap_rtc_data_fini(rt_dataset);
 
 err_pvr_free_list_destroy:
-   pvr_free_list_destroy(local_free_list);
+   for (uint32_t i = 0; i < free_list_count; i++) {
+      pvr_free_list_destroy(rt_dataset->geom_datas[i].local_free_list);
+   }
 
 err_vk_free_rt_dataset:
    vk_free(&device->vk.alloc, rt_dataset);
