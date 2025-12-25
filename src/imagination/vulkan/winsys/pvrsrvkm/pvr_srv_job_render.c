@@ -507,12 +507,9 @@ VkResult pvr_srv_render_target_dataset_create(
    if (result != VK_SUCCESS)
       goto err_vk_free_srv_rt_dataset;
 
-   srv_rt_dataset->rt_datas[0].handle = handles[0];
-   srv_rt_dataset->rt_datas[1].handle = handles[1];
-#if 1//v24.2
-   srv_rt_dataset->rt_datas[2].handle = handles[2];
-   srv_rt_dataset->rt_datas[3].handle = handles[3];
-#endif
+   for (uint32_t i = 0; i < ARRAY_SIZE(srv_rt_dataset->rt_datas); i++) {
+      srv_rt_dataset->rt_datas[i].handle = handles[i];
+   }
 
    for (uint32_t i = 0; i < ARRAY_SIZE(srv_rt_dataset->rt_datas); i++) {
       srv_rt_dataset->rt_datas[i].sync_prim = pvr_srv_sync_prim_alloc(srv_ws);
