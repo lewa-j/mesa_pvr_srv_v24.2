@@ -172,9 +172,13 @@
 #define DRM_IOCTL_SRVKM_SW_SYNC_INC_CMD                  \
    DRM_IOR(DRM_COMMAND_BASE + DRM_SRVKM_SW_SYNC_INC_CMD, \
            struct drm_srvkm_sw_timeline_advance_data)
+#if 0//v1.17
 #define DRM_IOCTL_SRVKM_INIT \
    DRM_IOWR(DRM_COMMAND_BASE + DRM_SRVKM_INIT, struct drm_srvkm_init_data)
-
+#else//v24.2
+#define DRM_IOCTL_SRVKM_INIT \
+   DRM_IOW(DRM_COMMAND_BASE + DRM_SRVKM_INIT, struct drm_srvkm_init_data)
+#endif
 /******************************************************************************
    Misc defines
  ******************************************************************************/
@@ -182,13 +186,21 @@
 #define SUPPORT_RGX_SET_OFFSET BITFIELD_BIT(4U)
 #define DEBUG_SET_OFFSET BITFIELD_BIT(10U)
 #define SUPPORT_BUFFER_SYNC_SET_OFFSET BITFIELD_BIT(11U)
-#define NUM_DRIVERS_SUPPORTED_CHECK_EN BITFIELD_BIT(17U)
-#define OPTIONS_BIT31 BITFIELD_BIT(31U)
+#define NUM_DRIVERS_SUPPORTED_CHECK_SET_OFFSET BITFIELD_BIT(17U)
+#define PERCONTEXT_FREELIST_SET_OFFSET BITFIELD_BIT(31U)
 
+#if 0//v1.17
 #define RGX_BUILD_OPTIONS                       \
    (SUPPORT_RGX_SET_OFFSET | DEBUG_SET_OFFSET | \
     SUPPORT_BUFFER_SYNC_SET_OFFSET |            \
-    NUM_DRIVERS_SUPPORTED_CHECK_EN | OPTIONS_BIT31)
+    PERCONTEXT_FREELIST_SET_OFFSET)
+#else//v24.2
+//DEBUG_SET_OFFSET is optional
+#define RGX_BUILD_OPTIONS                       \
+   (SUPPORT_RGX_SET_OFFSET | \
+    SUPPORT_BUFFER_SYNC_SET_OFFSET |            \
+    NUM_DRIVERS_SUPPORTED_CHECK_SET_OFFSET | PERCONTEXT_FREELIST_SET_OFFSET)
+#endif
 
 #define PVR_SRV_VERSION_MAJ 1U
 #define PVR_SRV_VERSION_MIN 17U
